@@ -20,8 +20,8 @@ class ByteStream {
 
     bool _error{};  //!< Flag indicating that the stream suffered an error.
 	bool _ended{}; //!< Flag indicating that the writer has ended input.
-	std::deque<char> q; //!< Data structure for containing bytes.
-	size_t cap, bytes_written{}, bytes_read{};
+	std::deque<char> q{}; //!< Data structure for containing bytes.
+	size_t _cap, _bytes_written{}, _bytes_read{};
 
   public:
     //! Construct a stream with room for `capacity` bytes.
