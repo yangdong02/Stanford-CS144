@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <queue>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
@@ -12,8 +13,13 @@ class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
 
-    ByteStream _output;  //!< The reassembled in-order byte stream
-    size_t _capacity;    //!< The maximum number of bytes
+    ByteStream _output;       //!< The reassembled in-order byte stream
+    size_t _capacity;         //!< The maximum number of bytes
+	size_t _ind;              //!< Index of _unr[0], i.e. first byte that is not put into _output
+	size_t _eofidx;           //!< Index of EOF.
+	size_t _ucount;           //!< Count of unreassembled bytes
+	std::deque<char> _unr;    //!< Unreassembled bytes
+	std::deque<bool> _vis;    //!< Whether _unr[i] exists
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
