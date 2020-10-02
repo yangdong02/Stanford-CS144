@@ -29,6 +29,7 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
 	int32_t off = ((n - isn) - static_cast<uint32_t>(checkpoint));
-	if(off < 0 && checkpoint + off > checkpoint) return checkpoint + ((1ULL << 32) + off);
+	if(off < 0 && checkpoint + off > checkpoint)
+		return checkpoint + static_cast<uint32_t>(off);
 	return off + checkpoint;
 }
