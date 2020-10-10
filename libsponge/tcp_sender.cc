@@ -29,8 +29,6 @@ uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _ack_seqno; }
 void TCPSender::fill_window() {
 	uint64_t window = _right_bound - _next_seqno;
 	if(_right_bound == _next_seqno && _ack_seqno == _next_seqno) window = 1;
-	std::cout << "fill window, window size =  " << window  << std::endl;
-	std::cout << "  next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 	string s;
 	TCPSegment seg;
 	while(window > 0 && !_fin_sent) {
@@ -48,22 +46,17 @@ void TCPSender::fill_window() {
 			_cur_rto = _rto;
 		_outstanding.push(seg);
 		_segments_out.push(seg);
-		std::cout << "Send segment (hdr = " << seg.header().summary() <<", pld = " << seg.payload().str() << std::endl;
 		if(seg.length_in_sequence_space() > window) throw std::runtime_error("TCP segment larger than window!");
 		window -= seg.length_in_sequence_space();
 		_next_seqno += seg.length_in_sequence_space();
 		_fin_sent |= seg.header().fin;
 	}
-	std::cout << "Finish fill window, now: ";
-	std::cout << "  next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 }
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
 //! \param window_size The remote receiver's advertised window size
 void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_size) {
 	uint64_t ack_new = unwrap(ackno, _isn, _ack_seqno);
-	std::cout << "ack_received " << ack_new << ' ' << window_size << std::endl;
-	std::cout << "  next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 	while(!_outstanding.empty()) {
 		const auto& f = _outstanding.front();
 		if(unwrap(f.header().seqno, _isn, _ack_seqno) + f.length_in_sequence_space() <= ack_new) {
@@ -78,32 +71,25 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 		_right_bound = ack_new + window_size;
 	}
 	fill_window();
-	std::cout << "  Finish ackreceive: next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
-	std::cout << "tick " << ms_since_last_tick << std::endl;
-	std::cout << "  next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 	if(_cur_rto <= ms_since_last_tick) {
 		if(_outstanding.empty()) throw std::runtime_error("RTO expired with no outstanding TCP segment!");
 		_segments_out.push(_outstanding.front());
-		std::cout << "Send segment (hdr = " << _outstanding.front().header().summary() <<", pld = " << _outstanding.front().payload().str() << std::endl;
 		if(_right_bound > _ack_seqno) {
 			++_fails;
 			_rto *= 2;
 		}
 		_cur_rto = _rto;
 	} else _cur_rto -= ms_since_last_tick;
-	std::cout << "  Finish tick: next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 }
 
 unsigned int TCPSender::consecutive_retransmissions() const { return _fails; }
 
 void TCPSender::send_empty_segment() {
-	std::cout << "send_empty_segment " << std::endl;
-	std::cout << "  next seqno = " << _next_seqno << " , ack_seqno = " << _ack_seqno << std::endl;
 	TCPSegment seg;
 	seg.header().seqno = wrap(_next_seqno, _isn);
-	std::cout << "Finish send_empty_segment " << std::endl;
+	_segments_out.push(seg);
 }
