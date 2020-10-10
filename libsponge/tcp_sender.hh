@@ -26,11 +26,29 @@ class TCPSender {
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
 
+    //! retransmission timeout, timer
+    unsigned int _rto, _cur_rto;
+
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+	
+	//! the (absolute) sequence number for the right bound byte. (exclusive)
+	uint64_t _right_bound{1};
+
+	//! the (absolute) sequence number for remote ACK
+	uint64_t _ack_seqno{0};
+
+	//! the number of consecutive failures
+	unsigned int _fails{0};
+
+	//! has FIN been sent?
+	bool _fin_sent{0};
+
+	//! Outstanding TCP segments that has not been sent.
+	std::queue<TCPSegment> _outstanding{};
 
   public:
     //! Initialize a TCPSender
