@@ -28,6 +28,7 @@ uint64_t TCPSender::bytes_in_flight() const { return _next_seqno - _ack_seqno; }
 
 void TCPSender::fill_window() {
 	uint64_t window = _right_bound - _next_seqno;
+	if(_right_bound < _next_seqno) return;
 	if(_right_bound == _next_seqno && _ack_seqno == _next_seqno) window = 1;
 	string s;
 	TCPSegment seg;
