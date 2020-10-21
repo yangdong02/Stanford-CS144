@@ -16,8 +16,6 @@ using namespace std;
 size_t TCPConnection::remaining_outbound_capacity() const { return _sender.stream_in().remaining_capacity(); }
 
 void TCPConnection::segment_received(const TCPSegment &seg) {
-	cerr << "[TCP debug] segment_received: " << seg.header().summary() << endl;
-	cerr << "[TCPDEBUG] Incoming stream status: endinput? " << _sender.stream_in().input_ended() << " eof? "<<_sender.stream_in().eof() << endl;
 	_time_since_last = 0;
 	if(seg.header().rst) {
 		end_error(false);
@@ -25,7 +23,6 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
 		return;
 	}
 	if(!_receiver.ackno().has_value() && !seg.header().syn) {
-		cerr << "[TCP debug] Bad segment! receiver is waiting for SYN, but segment has no SYN.\n";
 		return;
 	}
 	_receiver.segment_received(seg);
@@ -45,8 +42,6 @@ void TCPConnection::send_segment(TCPSegment seg) {
 	seg.header().win = _receiver.window_size();
 	seg.header().rst = _sender.stream_in().error();
 	_segments_out.push(seg);
-	cerr << ">> SEGMENT SENT: header = " << seg.header().summary() << "queue size = " << _segments_out.size() << endl;
-	cerr << "[TCPDEBUG] Incoming stream status: endinput? " << _sender.stream_in().input_ended() << " eof? "<<_sender.stream_in().eof() << endl;
 }
 void TCPConnection::send_all() {
 	while(_sender.segments_out().size()) {
@@ -58,7 +53,6 @@ void TCPConnection::send_all() {
 }
 
 size_t TCPConnection::write(const string &data) {
-	cerr << "[TCP debug] write \"" << data << "\", sz = " << data.length() << "\n";
 	if(!active()) return 0;
 	size_t ret = _sender.stream_in().write(data);
 	_sender.fill_window();
@@ -100,7 +94,7 @@ TCPConnection::~TCPConnection() {
     }
 }
 void TCPConnection::end_error(bool sendRst) {
-	cerr << "END ERROR!" << endl;
+	cerr << "[TCP debug] Ended with error! Sending rst..." << endl;
 	std::queue<TCPSegment>().swap(_segments_out);
 	if(sendRst) {
 		_sender.send_empty_segment();
@@ -108,9 +102,6 @@ void TCPConnection::end_error(bool sendRst) {
 		_sender.segments_out().pop();
 		rst.header().rst = true;
 		_segments_out.push(rst);
-		cerr << "Rst sent\n";
-		cerr << ">> SEGMENT SENT: header = " << rst.header().summary() << ", queue size = " << _segments_out.size() << endl;
-	cerr << "[TCPDEBUG] Incoming stream status: endinput? " << _sender.stream_in().input_ended() << " eof? "<<_sender.stream_in().eof() << endl;
 	}
 	_active = false;
 	_sender.stream_in().set_error();
@@ -128,7 +119,7 @@ void TCPConnection::try_fin() {
 	}
 }
 void TCPConnection::end_input_stream() {
-	cerr << "[TcP debug] end input stream\n";
+	cerr << "[TcP debug] input stream ended.\n";
 	_sender.stream_in().end_input();
 	_sender.fill_window();
 	send_all();
