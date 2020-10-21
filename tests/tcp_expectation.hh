@@ -5,6 +5,7 @@
 #include "tcp_expectation_forward.hh"
 #include "tcp_fsm_test_harness.hh"
 #include "tcp_state.hh"
+#include <iostream>
 
 #include <algorithm>
 #include <cstdint>
@@ -227,6 +228,7 @@ struct ExpectSegment : public TCPExpectation {
         if (ParseResult::NoError != seg.parse(harness._flt.read())) {
             throw SegmentExpectationViolation::violated_verb("was parsable");
         }
+		std::cerr << "<Tester> segment received: " << seg.header().summary() << std::endl;
         if (ack.has_value() and seg.header().ack != ack.value()) {
             throw SegmentExpectationViolation::violated_field("ack", ack.value(), seg.header().ack);
         }

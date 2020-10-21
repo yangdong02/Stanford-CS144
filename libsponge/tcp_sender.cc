@@ -71,7 +71,6 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 	if(ack_new + window_size > _right_bound) {
 		_right_bound = ack_new + window_size;
 	}
-	fill_window();
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
