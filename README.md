@@ -1,3 +1,9 @@
+# Introduction
+
+This repo implements a simplified TCP protocol, following lab 0-4 of the course Stanford CS144, *Introduction to Computer Networking*, Fall 2020.
+
+# Build instructions
+
 For build prereqs, see [the CS144 VM setup instructions](https://web.stanford.edu/class/cs144/vm_howto).
 
 ## Sponge quickstart
